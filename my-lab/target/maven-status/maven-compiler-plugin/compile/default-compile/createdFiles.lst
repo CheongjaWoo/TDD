@@ -1,0 +1,8 @@
+com\example\user\UserRepository.class
+com\example\user\EmailSender.class
+com\example\StringCalculator.class
+com\example\App.class
+com\example\Calculator.class
+com\example\user\UserService.class
+com\example\user\User.class
+com\example\MyNumberUtil.class

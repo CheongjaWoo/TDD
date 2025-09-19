@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ko"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Book.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">my-app</a> &gt; <a href="index.source.html" class="el_package">com.example.books</a> &gt; <span class="el_source">Book.java</span></div><h1>Book.java</h1><pre class="source lang-java linenums">package com.example.books;
+
+import java.util.Objects;
+
+public class Book {
+    private final String isbn;
+    private final String title;
+    private final String author;
+    
+<span class="fc" id="L10">    public Book(String isbn, String title, String author) {</span>
+<span class="fc" id="L11">        validateIsbn(isbn);</span>
+<span class="fc" id="L12">        validateTitle(title);</span>
+<span class="fc" id="L13">        validateAuthor(author);</span>
+        
+<span class="fc" id="L15">        this.isbn = isbn;</span>
+<span class="fc" id="L16">        this.title = title;</span>
+<span class="fc" id="L17">        this.author = author;</span>
+<span class="fc" id="L18">    }</span>
+    
+    private void validateIsbn(String isbn) {
+<span class="fc bfc" id="L21" title="All 2 branches covered.">        if (isbn == null) {</span>
+<span class="fc" id="L22">            throw new IllegalArgumentException(&quot;ISBN은 필수입니다&quot;);</span>
+        }
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        if (isbn.trim().isEmpty()) {</span>
+<span class="fc" id="L25">            throw new IllegalArgumentException(&quot;유효하지 않은 ISBN입니다&quot;);</span>
+        }
+        
+        // 더 엄격한 ISBN 검증
+<span class="fc" id="L29">        String cleanIsbn = isbn.replaceAll(&quot;[^0-9X]&quot;, &quot;&quot;); // 숫자와 X만 남김</span>
+        
+        // 길이 검증 (ISBN-10: 10자리, ISBN-13: 13자리)
+<span class="fc bfc" id="L32" title="All 4 branches covered.">        if (cleanIsbn.length() != 10 &amp;&amp; cleanIsbn.length() != 13) {</span>
+<span class="fc" id="L33">            throw new IllegalArgumentException(&quot;유효하지 않은 ISBN입니다&quot;);</span>
+        }
+        
+        // ISBN-13은 978 또는 979로 시작해야 함
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (cleanIsbn.length() == 13) {</span>
+<span class="pc bpc" id="L38" title="3 of 4 branches missed.">            if (!cleanIsbn.startsWith(&quot;978&quot;) &amp;&amp; !cleanIsbn.startsWith(&quot;979&quot;)) {</span>
+<span class="nc" id="L39">                throw new IllegalArgumentException(&quot;유효하지 않은 ISBN입니다&quot;);</span>
+            }
+        }
+        
+        // 기본적인 형식 검증
+<span class="pc bpc" id="L44" title="1 of 4 branches missed.">        if (!cleanIsbn.matches(&quot;^[0-9]{9}[0-9X]$&quot;) &amp;&amp; !cleanIsbn.matches(&quot;^[0-9]{13}$&quot;)) {</span>
+<span class="nc" id="L45">            throw new IllegalArgumentException(&quot;유효하지 않은 ISBN입니다&quot;);</span>
+        }
+<span class="fc" id="L47">    }</span>
+    
+    private void validateTitle(String title) {
+<span class="fc bfc" id="L50" title="All 4 branches covered.">        if (title == null || title.trim().isEmpty()) {</span>
+<span class="fc" id="L51">            throw new IllegalArgumentException(&quot;제목은 필수입니다&quot;);</span>
+        }
+<span class="fc" id="L53">    }</span>
+    
+    private void validateAuthor(String author) {
+<span class="pc bpc" id="L56" title="1 of 4 branches missed.">        if (author == null || author.trim().isEmpty()) {</span>
+<span class="fc" id="L57">            throw new IllegalArgumentException(&quot;저자는 필수입니다&quot;);</span>
+        }
+<span class="fc" id="L59">    }</span>
+    
+    public String getIsbn() {
+<span class="fc" id="L62">        return isbn;</span>
+    }
+    
+    public String getTitle() {
+<span class="fc" id="L66">        return title;</span>
+    }
+    
+    public String getAuthor() {
+<span class="fc" id="L70">        return author;</span>
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="pc bpc" id="L76" title="2 of 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L77">        Book book = (Book) o;</span>
+<span class="fc" id="L78">        return Objects.equals(isbn, book.isbn);</span>
+    }
+    
+    @Override
+    public int hashCode() {
+<span class="fc" id="L83">        return Objects.hash(isbn);</span>
+    }
+    
+    @Override
+    public String toString() {
+<span class="nc" id="L88">        return String.format(&quot;Book{isbn='%s', title='%s', author='%s'}&quot;, </span>
+                           isbn, title, author);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

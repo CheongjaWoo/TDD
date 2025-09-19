@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ko"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookNotFoundException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">my-app</a> &gt; <a href="index.source.html" class="el_package">com.example.library.exception</a> &gt; <span class="el_source">BookNotFoundException.java</span></div><h1>BookNotFoundException.java</h1><pre class="source lang-java linenums">/**
+ * BookNotFoundException
+ * -------------------------------------
+ * - 도서관 시스템에서 특정 책(Book)을 찾을 수 없을 때 발생시키는 예외 클래스
+ * - RuntimeException을 상속받아 &quot;언체크 예외(Unchecked Exception)&quot;로 동작
+ *   → 호출하는 쪽에서 반드시 예외 처리를 강제하지 않음
+ *
+ * 사용 예:
+ *   Book book = repository.findById(bookId)
+ *           .orElseThrow(() -&gt; new BookNotFoundException(&quot;도서를 찾을 수 없습니다: &quot; + bookId));
+ * File Path : library/exception/BookNotFoundException.java
+ */
+package com.example.library.exception;
+
+public class BookNotFoundException extends RuntimeException {
+
+    /**
+     * 단순 메시지를 전달하는 생성자
+     * @param message 예외 원인을 설명하는 메시지
+     */
+    public BookNotFoundException(String message) {
+<span class="fc" id="L22">        super(message);</span>
+<span class="fc" id="L23">    }</span>
+    
+    /**
+     * 메시지와 실제 원인(cause)을 함께 전달하는 생성자
+     * @param message 예외 원인을 설명하는 메시지
+     * @param cause 중첩 예외(실제 발생한 예외)
+     */
+    public BookNotFoundException(String message, Throwable cause) {
+<span class="nc" id="L31">        super(message, cause);</span>
+<span class="nc" id="L32">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

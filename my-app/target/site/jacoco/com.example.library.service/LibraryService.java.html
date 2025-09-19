@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ko"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LibraryService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">my-app</a> &gt; <a href="index.source.html" class="el_package">com.example.library.service</a> &gt; <span class="el_source">LibraryService.java</span></div><h1>LibraryService.java</h1><pre class="source lang-java linenums">// src/main/java/com/example/library/service/LibraryService.java
+package com.example.library.service;
+
+import com.example.library.model.Book;
+import com.example.library.model.Member;
+import com.example.library.model.Loan;
+import com.example.library.repository.BookRepository;
+import com.example.library.repository.MemberRepository;
+import com.example.library.repository.LoanRepository;
+import com.example.library.exception.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * LibraryService 클래스
+ * ------------------------------
+ * - 도서관의 핵심 비즈니스 로직을 담당하는 서비스 계층
+ * - Book, Member, Loan 을 조합하여
+ *   도서 대출 / 반납 / 연체 관리 / 연체료 계산 기능 제공
+ */
+public class LibraryService {
+    private final BookRepository bookRepository;     // 도서 저장소
+    private final MemberRepository memberRepository; // 회원 저장소
+    private final LoanRepository loanRepository;     // 대출 저장소
+    
+    /**
+     * 생성자 주입 (Dependency Injection)
+     * - 외부에서 Repository 구현체를 전달받아 사용
+     */
+    public LibraryService(BookRepository bookRepository, 
+                         MemberRepository memberRepository, 
+<span class="fc" id="L34">                         LoanRepository loanRepository) {</span>
+<span class="fc" id="L35">        this.bookRepository = bookRepository;</span>
+<span class="fc" id="L36">        this.memberRepository = memberRepository;</span>
+<span class="fc" id="L37">        this.loanRepository = loanRepository;</span>
+<span class="fc" id="L38">    }</span>
+    
+    /**
+     * 도서 대출 처리
+     * 1. ISBN, 회원 ID 로 도서와 회원 조회
+     * 2. 대출 가능 여부 검증 (도서/회원)
+     * 3. 도서 상태 및 회원 대출 권수 갱신
+     * 4. Loan 객체 생성 후 저장
+     */
+    public Loan borrowBook(String isbn, String memberId, LocalDate loanDate) {
+<span class="fc" id="L48">        Book book = findBookByIsbn(isbn);</span>
+<span class="fc" id="L49">        Member member = findMemberById(memberId);</span>
+        
+<span class="fc" id="L51">        validateBookAvailable(book);     // 도서 대출 가능 여부 확인</span>
+<span class="fc" id="L52">        validateMemberCanBorrow(member); // 회원 대출 가능 여부 확인</span>
+        
+        // 도서 대출 처리
+<span class="fc" id="L55">        book.borrow();</span>
+<span class="fc" id="L56">        member.borrowBook();</span>
+        
+        // 대출 정보 생성 및 저장
+<span class="fc" id="L59">        Loan loan = new Loan(book, member, loanDate);</span>
+        
+<span class="fc" id="L61">        bookRepository.save(book);</span>
+<span class="fc" id="L62">        memberRepository.save(member);</span>
+        
+<span class="fc" id="L64">        return loanRepository.save(loan);</span>
+    }
+    
+    /**
+     * 도서 반납 처리
+     * 1. ISBN 으로 활성 Loan 조회
+     * 2. Loan, Book, Member 상태 변경
+     * 3. 변경된 데이터 저장
+     */
+    public Loan returnBook(String isbn, LocalDate returnDate) {
+<span class="fc" id="L74">        Loan loan = findActiveLoanByIsbn(isbn);</span>
+        
+        // 반납 처리
+<span class="fc" id="L77">        loan.returnBook(returnDate);</span>
+<span class="fc" id="L78">        loan.getBook().returnBook();</span>
+<span class="fc" id="L79">        loan.getMember().returnBook();</span>
+        
+        // 저장
+<span class="fc" id="L82">        loanRepository.save(loan);</span>
+<span class="fc" id="L83">        bookRepository.save(loan.getBook());</span>
+<span class="fc" id="L84">        memberRepository.save(loan.getMember());</span>
+        
+<span class="fc" id="L86">        return loan;</span>
+    }
+    
+    /**
+     * 회원의 대출 이력 조회
+     */
+    public List&lt;Loan&gt; getMemberLoans(String memberId) {
+<span class="fc" id="L93">        Member member = findMemberById(memberId);</span>
+<span class="fc" id="L94">        return loanRepository.findByMember(member);</span>
+    }
+    
+    /**
+     * 연체된 도서 목록 조회
+     * - 활성 Loan 중 checkDate 기준으로 연체 여부 필터링
+     */
+    public List&lt;Loan&gt; getOverdueBooks(LocalDate checkDate) {
+<span class="fc" id="L102">        return loanRepository.findActiveLoans()</span>
+<span class="fc" id="L103">                .stream()</span>
+<span class="fc" id="L104">                .filter(loan -&gt; loan.isOverdue(checkDate))</span>
+<span class="fc" id="L105">                .collect(Collectors.toList());</span>
+    }
+    
+    /**
+     * 특정 도서의 연체료 계산
+     */
+    public int calculateLateFee(String isbn, LocalDate checkDate) {
+<span class="fc" id="L112">        Loan loan = findActiveLoanByIsbn(isbn);</span>
+<span class="fc" id="L113">        return loan.calculateLateFee(checkDate);</span>
+    }
+    
+    // ===== Private Helper Methods =====
+    
+    /** ISBN 으로 도서 조회 (없으면 BookNotFoundException 발생) */
+    private Book findBookByIsbn(String isbn) {
+<span class="fc" id="L120">        return bookRepository.findByIsbn(isbn)</span>
+<span class="fc" id="L121">                .orElseThrow(() -&gt; new BookNotFoundException(&quot;도서를 찾을 수 없습니다: &quot; + isbn));</span>
+    }
+    
+    /** 회원ID 로 회원 조회 (없으면 MemberNotFoundException 발생) */
+    private Member findMemberById(String memberId) {
+<span class="fc" id="L126">        return memberRepository.findById(memberId)</span>
+<span class="fc" id="L127">                .orElseThrow(() -&gt; new MemberNotFoundException(&quot;회원을 찾을 수 없습니다: &quot; + memberId));</span>
+    }
+    
+    /** ISBN 으로 활성 Loan 조회 (없으면 IllegalStateException 발생) */
+    private Loan findActiveLoanByIsbn(String isbn) {
+<span class="fc" id="L132">        return loanRepository.findActiveLoanByBookIsbn(isbn)</span>
+<span class="fc" id="L133">                .orElseThrow(() -&gt; new IllegalStateException(</span>
+                    &quot;해당 도서의 활성 대출을 찾을 수 없습니다: &quot; + isbn));
+    }
+    
+    /** 도서가 대출 가능한 상태인지 검증 */
+    private void validateBookAvailable(Book book) {
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (!book.isAvailable()) {</span>
+<span class="fc" id="L140">            throw new BookNotAvailableException(&quot;대출 불가능한 도서입니다: &quot; + book.getTitle());</span>
+        }
+<span class="fc" id="L142">    }</span>
+    
+    /** 회원이 대출 가능한 상태인지 검증 */
+    private void validateMemberCanBorrow(Member member) {
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        if (!member.canBorrow()) {</span>
+<span class="fc" id="L147">            throw new MemberBorrowLimitExceededException(&quot;대출 한도를 초과했습니다: &quot; + member.getName());</span>
+        }
+<span class="fc" id="L149">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

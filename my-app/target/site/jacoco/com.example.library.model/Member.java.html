@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ko"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Member.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">my-app</a> &gt; <a href="index.source.html" class="el_package">com.example.library.model</a> &gt; <span class="el_source">Member.java</span></div><h1>Member.java</h1><pre class="source lang-java linenums">/**
+ * Member 클래스
+ * ------------------------------
+ * - 도서관 회원을 표현하는 모델 클래스
+ * - 회원 ID, 이름, 현재 대출 중인 도서 권수를 관리
+ * - 최대 대출 권수 제한(MAX_BORROW_LIMIT)을 적용
+ * * File Path : library/model/Member.java
+ */
+package com.example.library.model;
+
+public class Member {
+    // 회원 1명이 동시에 대출할 수 있는 최대 권수
+    private static final int MAX_BORROW_LIMIT = 3;
+    
+    private final String memberId;        // 회원 고유 ID
+    private final String name;            // 회원 이름
+    private int borrowedBooksCount;       // 현재 대출 중인 도서 권수
+    
+    /**
+     * Member 생성자
+     * - memberId와 name은 필수 값이며, null/빈 값일 경우 예외 발생
+     * - 처음 생성 시 borrowedBooksCount = 0
+     *
+     * @param memberId 회원 고유 ID
+     * @param name     회원 이름
+     */
+<span class="fc" id="L27">    public Member(String memberId, String name) {</span>
+<span class="pc bpc" id="L28" title="1 of 4 branches missed.">        if (memberId == null || memberId.trim().isEmpty()) {</span>
+<span class="fc" id="L29">            throw new IllegalArgumentException(&quot;회원ID는 필수입니다&quot;);</span>
+        }
+<span class="pc bpc" id="L31" title="1 of 4 branches missed.">        if (name == null || name.trim().isEmpty()) {</span>
+<span class="fc" id="L32">            throw new IllegalArgumentException(&quot;이름은 필수입니다&quot;);</span>
+        }
+        
+<span class="fc" id="L35">        this.memberId = memberId.trim();</span>
+<span class="fc" id="L36">        this.name = name.trim();</span>
+<span class="fc" id="L37">        this.borrowedBooksCount = 0; // 초기 대출 권수는 0</span>
+<span class="fc" id="L38">    }</span>
+    
+    // ===== Getter 메서드 =====
+    public String getMemberId() {
+<span class="fc" id="L42">        return memberId;</span>
+    }
+    
+    public String getName() {
+<span class="fc" id="L46">        return name;</span>
+    }
+    
+    public int getBorrowedBooksCount() {
+<span class="fc" id="L50">        return borrowedBooksCount;</span>
+    }
+    
+    /**
+     * 현재 회원이 추가로 책을 빌릴 수 있는지 확인
+     * @return true → 대출 가능 / false → 대출 불가
+     */
+    public boolean canBorrow() {
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        return borrowedBooksCount &lt; MAX_BORROW_LIMIT;</span>
+    }
+    
+    /**
+     * 책을 대출할 때 호출
+     * - canBorrow() 가 false이면 예외 발생
+     * - borrowedBooksCount 1 증가
+     */
+    public void borrowBook() {
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (!canBorrow()) {</span>
+<span class="fc" id="L68">            throw new IllegalStateException(&quot;대출 한도를 초과했습니다 (최대 &quot; + MAX_BORROW_LIMIT + &quot;권)&quot;);</span>
+        }
+<span class="fc" id="L70">        this.borrowedBooksCount++;</span>
+<span class="fc" id="L71">    }</span>
+    
+    /**
+     * 책을 반납할 때 호출
+     * - 현재 대출 권수가 0이면 반납 불가 (예외 발생)
+     * - borrowedBooksCount 1 감소
+     */
+    public void returnBook() {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (borrowedBooksCount == 0) {</span>
+<span class="fc" id="L80">            throw new IllegalStateException(&quot;반납할 도서가 없습니다&quot;);</span>
+        }
+<span class="fc" id="L82">        this.borrowedBooksCount--;</span>
+<span class="fc" id="L83">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

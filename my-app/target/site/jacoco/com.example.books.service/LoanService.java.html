@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ko"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoanService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">my-app</a> &gt; <a href="index.source.html" class="el_package">com.example.books.service</a> &gt; <span class="el_source">LoanService.java</span></div><h1>LoanService.java</h1><pre class="source lang-java linenums">package com.example.books.service;
+
+import com.example.books.Book;
+import com.example.books.User;
+import com.example.books.Loan;
+import com.example.books.LoanStatus;
+import com.example.books.repository.BookRepository;
+import com.example.books.repository.UserRepository;
+import com.example.books.repository.LoanRepository;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+public class LoanService {
+    private final BookRepository bookRepository;
+    private final UserRepository userRepository;
+    private final LoanRepository loanRepository;
+    private final NotificationService notificationService;
+    private final int defaultLoanPeriodDays;
+    
+    public LoanService(BookRepository bookRepository, 
+                      UserRepository userRepository,
+                      LoanRepository loanRepository,
+                      NotificationService notificationService) {
+<span class="nc" id="L26">        this(bookRepository, userRepository, loanRepository, notificationService, 14);</span>
+<span class="nc" id="L27">    }</span>
+    
+    public LoanService(BookRepository bookRepository, 
+                      UserRepository userRepository,
+                      LoanRepository loanRepository,
+                      NotificationService notificationService,
+<span class="fc" id="L33">                      int defaultLoanPeriodDays) {</span>
+<span class="fc" id="L34">        this.bookRepository = bookRepository;</span>
+<span class="fc" id="L35">        this.userRepository = userRepository;</span>
+<span class="fc" id="L36">        this.loanRepository = loanRepository;</span>
+<span class="fc" id="L37">        this.notificationService = notificationService;</span>
+<span class="fc" id="L38">        this.defaultLoanPeriodDays = defaultLoanPeriodDays;</span>
+<span class="fc" id="L39">    }</span>
+    
+    public Loan loanBook(String userId, String isbn) {
+        // 사용자 검증
+<span class="fc" id="L43">        User user = userRepository.findById(userId)</span>
+<span class="fc" id="L44">            .orElseThrow(() -&gt; new UserNotFoundException(&quot;사용자를 찾을 수 없습니다: &quot; + userId));</span>
+        
+        // 도서 검증
+<span class="fc" id="L47">        Book book = bookRepository.findByIsbn(isbn)</span>
+<span class="fc" id="L48">            .orElseThrow(() -&gt; new BookNotFoundException(&quot;도서를 찾을 수 없습니다: &quot; + isbn));</span>
+        
+        // 도서 대출 가능 여부 확인
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (!loanRepository.isBookAvailable(isbn)) {</span>
+<span class="fc" id="L52">            throw new BookNotAvailableException(&quot;현재 대출 중인 도서입니다: &quot; + isbn);</span>
+        }
+        
+        // 사용자 대출 한도 확인
+<span class="fc" id="L56">        int currentLoanCount = loanRepository.countActiveLoansByUserId(userId);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (currentLoanCount &gt;= user.getMaxLoanCount()) {</span>
+<span class="fc" id="L58">            throw new LoanLimitExceededException(&quot;대출 한도를 초과했습니다. 현재: &quot; + currentLoanCount + &quot;/&quot; + user.getMaxLoanCount());</span>
+        }
+        
+        // 대출 처리
+<span class="fc" id="L62">        String loanId = UUID.randomUUID().toString();</span>
+<span class="fc" id="L63">        Loan loan = new Loan(loanId, userId, isbn, LocalDate.now(), defaultLoanPeriodDays);</span>
+<span class="fc" id="L64">        loanRepository.save(loan);</span>
+        
+        // 알림 발송
+<span class="fc" id="L67">        notificationService.sendLoanConfirmation(user, book);</span>
+        
+<span class="fc" id="L69">        return loan;</span>
+    }
+    
+    public void returnBook(String loanId) {
+<span class="fc" id="L73">        Loan loan = loanRepository.findById(loanId)</span>
+<span class="fc" id="L74">            .orElseThrow(() -&gt; new LoanNotFoundException(&quot;대출 정보를 찾을 수 없습니다: &quot; + loanId));</span>
+        
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (loan.getStatus() != LoanStatus.ACTIVE) {</span>
+<span class="fc" id="L77">            throw new InvalidLoanStatusException(&quot;이미 반납된 도서입니다&quot;);</span>
+        }
+        
+<span class="fc" id="L80">        loan.returnBook(LocalDate.now());</span>
+<span class="fc" id="L81">        loanRepository.save(loan);</span>
+        
+        // 알림 발송
+<span class="fc" id="L84">        User user = userRepository.findById(loan.getUserId()).orElseThrow();</span>
+<span class="fc" id="L85">        Book book = bookRepository.findByIsbn(loan.getIsbn()).orElseThrow();</span>
+<span class="fc" id="L86">        notificationService.sendReturnConfirmation(user, book);</span>
+<span class="fc" id="L87">    }</span>
+    
+    public List&lt;Loan&gt; getUserLoans(String userId) {
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        if (!userRepository.existsById(userId)) {</span>
+<span class="nc" id="L91">            throw new UserNotFoundException(&quot;사용자를 찾을 수 없습니다: &quot; + userId);</span>
+        }
+<span class="nc" id="L93">        return loanRepository.findByUserId(userId);</span>
+    }
+    
+    public List&lt;Loan&gt; getOverdueLoans() {
+<span class="fc" id="L97">        return loanRepository.findOverdueLoans(LocalDate.now());</span>
+    }
+    
+    public void sendOverdueNotifications() {
+<span class="nc" id="L101">        List&lt;Loan&gt; overdueLoans = getOverdueLoans();</span>
+        
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        for (Loan loan : overdueLoans) {</span>
+<span class="nc" id="L104">            User user = userRepository.findById(loan.getUserId()).orElseThrow();</span>
+<span class="nc" id="L105">            Book book = bookRepository.findByIsbn(loan.getIsbn()).orElseThrow();</span>
+<span class="nc" id="L106">            long overdueDays = loan.getOverdueDays(LocalDate.now());</span>
+            
+<span class="nc" id="L108">            notificationService.sendOverdueNotification(user, book, overdueDays);</span>
+<span class="nc" id="L109">        }</span>
+<span class="nc" id="L110">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

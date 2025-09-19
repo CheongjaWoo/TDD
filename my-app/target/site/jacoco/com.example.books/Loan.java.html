@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ko"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Loan.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">my-app</a> &gt; <a href="index.source.html" class="el_package">com.example.books</a> &gt; <span class="el_source">Loan.java</span></div><h1>Loan.java</h1><pre class="source lang-java linenums">package com.example.books;
+
+import java.time.LocalDate;
+import java.util.Objects;
+
+public class Loan {
+    private final String id;
+    private final String userId;
+    private final String isbn;
+    private final LocalDate loanDate;
+    private final LocalDate dueDate;
+    private LocalDate returnDate;
+    private LoanStatus status;
+    
+<span class="fc" id="L15">    public Loan(String id, String userId, String isbn, LocalDate loanDate, int loanPeriodDays) {</span>
+<span class="pc bpc" id="L16" title="2 of 4 branches missed.">        if (id == null || id.trim().isEmpty()) {</span>
+<span class="nc" id="L17">            throw new IllegalArgumentException(&quot;대출 ID는 필수입니다&quot;);</span>
+        }
+<span class="pc bpc" id="L19" title="2 of 4 branches missed.">        if (userId == null || userId.trim().isEmpty()) {</span>
+<span class="nc" id="L20">            throw new IllegalArgumentException(&quot;사용자 ID는 필수입니다&quot;);</span>
+        }
+<span class="pc bpc" id="L22" title="2 of 4 branches missed.">        if (isbn == null || isbn.trim().isEmpty()) {</span>
+<span class="nc" id="L23">            throw new IllegalArgumentException(&quot;도서 ISBN은 필수입니다&quot;);</span>
+        }
+<span class="pc bpc" id="L25" title="1 of 2 branches missed.">        if (loanDate == null) {</span>
+<span class="nc" id="L26">            throw new IllegalArgumentException(&quot;대출일은 필수입니다&quot;);</span>
+        }
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">        if (loanPeriodDays &lt;= 0) {</span>
+<span class="nc" id="L29">            throw new IllegalArgumentException(&quot;대출 기간은 1일 이상이어야 합니다&quot;);</span>
+        }
+        
+<span class="fc" id="L32">        this.id = id;</span>
+<span class="fc" id="L33">        this.userId = userId;</span>
+<span class="fc" id="L34">        this.isbn = isbn;</span>
+<span class="fc" id="L35">        this.loanDate = loanDate;</span>
+<span class="fc" id="L36">        this.dueDate = loanDate.plusDays(loanPeriodDays);</span>
+<span class="fc" id="L37">        this.status = LoanStatus.ACTIVE;</span>
+<span class="fc" id="L38">    }</span>
+    
+    public void returnBook(LocalDate returnDate) {
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (returnDate == null) {</span>
+<span class="nc" id="L42">            throw new IllegalArgumentException(&quot;반납일은 필수입니다&quot;);</span>
+        }
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (returnDate.isBefore(loanDate)) {</span>
+<span class="nc" id="L45">            throw new IllegalArgumentException(&quot;반납일은 대출일 이후여야 합니다&quot;);</span>
+        }
+        
+<span class="fc" id="L48">        this.returnDate = returnDate;</span>
+<span class="fc" id="L49">        this.status = LoanStatus.RETURNED;</span>
+<span class="fc" id="L50">    }</span>
+    
+    public boolean isOverdue(LocalDate currentDate) {
+<span class="nc bnc" id="L53" title="All 4 branches missed.">        return status == LoanStatus.ACTIVE &amp;&amp; currentDate.isAfter(dueDate);</span>
+    }
+    
+    public long getOverdueDays(LocalDate currentDate) {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (!isOverdue(currentDate)) {</span>
+<span class="nc" id="L58">            return 0;</span>
+        }
+<span class="nc" id="L60">        return currentDate.toEpochDay() - dueDate.toEpochDay();</span>
+    }
+    
+    // Getters
+<span class="nc" id="L64">    public String getId() { return id; }</span>
+<span class="fc" id="L65">    public String getUserId() { return userId; }</span>
+<span class="fc" id="L66">    public String getIsbn() { return isbn; }</span>
+<span class="fc" id="L67">    public LocalDate getLoanDate() { return loanDate; }</span>
+<span class="fc" id="L68">    public LocalDate getDueDate() { return dueDate; }</span>
+<span class="fc" id="L69">    public LocalDate getReturnDate() { return returnDate; }</span>
+<span class="fc" id="L70">    public LoanStatus getStatus() { return status; }</span>
+    
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (this == o) return true;</span>
+<span class="nc bnc" id="L75" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="nc" id="L76">        Loan loan = (Loan) o;</span>
+<span class="nc" id="L77">        return Objects.equals(id, loan.id);</span>
+    }
+    
+    @Override
+    public int hashCode() {
+<span class="nc" id="L82">        return Objects.hash(id);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
